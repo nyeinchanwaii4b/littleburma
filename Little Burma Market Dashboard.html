@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Little Burma Market Research Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <style>
+        :root {
+            --color-primary: #2180D9;
+            --color-primary-dark: #1a6ab0;
+            --color-secondary: #5e5240;
+            --color-accent: #32b8c6;
+            --color-success: #2b8081;
+            --color-warning: #d48961;
+            --color-error: #c01530;
+            --color-bg: #fcfcf9;
+            --color-surface: #ffffff;
+            --color-border: #e0d5c8;
+            --color-text: #134252;
+            --color-text-light: #626c71;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f5f5f2 0%, #fafaf8 100%);
+            color: var(--color-text);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(33, 128, 217, 0.2);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: var(--color-primary);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--color-accent);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 8px;
+            height: 30px;
+            background: var(--color-accent);
+            border-radius: 4px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--color-border);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+            transform: translateY(-4px);
+        }
+
+        .metric-card {
+            text-align: center;
+            padding: 30px 25px;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: var(--color-text-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: 8px;
+        }
+
+        .metric-subtext {
+            font-size: 0.85em;
+            color: var(--color-text-light);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+
+        .chart-container.small {
+            height: 300px;
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .info-table thead {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .info-table th,
+        .info-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .info-table tbody tr:hover {
+            background: var(--color-bg);
+        }
+
+        .info-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        .badge-primary {
+            background: rgba(33, 128, 217, 0.15);
+            color: var(--color-primary);
+        }
+
+        .badge-success {
+            background: rgba(43, 128, 129, 0.15);
+            color: var(--color-success);
+        }
+
+        .badge-warning {
+            background: rgba(212, 137, 97, 0.15);
+            color: var(--color-warning);
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(50, 184, 198, 0.1) 0%, rgba(33, 128, 217, 0.05) 100%);
+            border-left: 4px solid var(--color-accent);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .highlight-box h4 {
+            color: var(--color-primary);
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .highlight-box p {
+            color: var(--color-text-light);
+            margin: 0;
+            font-size: 0.95em;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            font-weight: 500;
+            color: var(--color-text);
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: var(--color-primary);
+            font-size: 1.1em;
+        }
+
+        .phase-card {
+            border-left: 4px solid var(--color-accent);
+            padding-left: 20px;
+        }
+
+        .phase-card h4 {
+            color: var(--color-primary);
+            margin-bottom: 12px;
+        }
+
+        .phase-card p {
+            color: var(--color-text-light);
+            font-size: 0.95em;
+            margin-bottom: 8px;
+        }
+
+        .footer {
+            background: var(--color-text);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .footer p {
+            margin: 8px 0;
+            opacity: 0.9;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border: 2px solid var(--color-border);
+            background: white;
+            color: var(--color-text);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: var(--color-primary);
+            color: white;
+            border-color: var(--color-primary);
+        }
+
+        .tab-btn:hover {
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .section-title {
+                font-size: 1.3em;
+            }
+
+            .metric-value {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🇲🇲 Little Burma Market Research</h1>
+        <p>Comprehensive Market Sizing & Strategic Analysis Dashboard</p>
+    </div>
+
+    <div class="container">
+        <!-- EXECUTIVE SUMMARY -->
+        <div class="section">
+            <h2 class="section-title">Executive Summary</h2>
+            
+            <div class="grid-3">
+                <div class="card metric-card">
+                    <div class="metric-label">Total Addressable Market</div>
+                    <div class="metric-value">£40.1M</div>
+                    <div class="metric-subtext">Mid-range estimate (2024)</div>
+                </div>
+
+                <div class="card metric-card">
+                    <div class="metric-label">Myanmar Community UK</div>
+                    <div class="metric-value">86,400</div>
+                    <div class="metric-subtext">Heritage population estimate</div>
+                </div>
+
+                <div class="card metric-card">
+                    <div class="metric-label">Market Growth (CAGR)</div>
+                    <div class="metric-value">8.7%</div>
+                    <div class="metric-subtext">UK ethnic food market 2024-2032</div>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <h4>🎯 Key Finding</h4>
+                <p>Little Burma operates in a <strong>£23.7M–£59M addressable market</strong> with <strong>fragmented competition</strong> and significant whitespace, particularly outside London. The combination of rapid market growth (8.7% CAGR), increasing diaspora populations (post-2021 coup), and underdeveloped retail infrastructure creates a compelling opportunity for a professional, data-driven supplier.</p>
+            </div>
+        </div>
+
+        <!-- MARKET SIZING -->
+        <div class="section">
+            <h2 class="section-title">Market Sizing by Scenario</h2>
+            
+            <div class="grid-2">
+                <div class="card">
+                    <div class="chart-container">
+                        <canvas id="scenarioChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="color: var(--color-primary); margin-bottom: 20px;">Scenario Breakdown</h3>
+                    <div class="stat-row">
+                        <span class="stat-label">Conservative Estimate</span>
+                        <span class="stat-value">£23.7M</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Mid-Range Estimate</span>
+                        <span class="stat-value">£40.1M</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">High Estimate</span>
+                        <span class="stat-value">£59.0M</span>
+                    </div>
+                    <div class="highlight-box" style="margin-top: 20px;">
+                        <h4>Market Composition</h4>
+                        <p><strong>B2B Wholesale (70%):</strong> £5.6M–£16.7M | <strong>B2C Direct (30%):</strong> £18.1M–£42.3M</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- POPULATION & DEMOGRAPHICS -->
+        <div class="section">
+            <h2 class="section-title">Myanmar Community: Population & Distribution</h2>
+            
+            <div class="grid-2">
+                <div class="card">
+                    <h3 style="color: var(--color-primary); margin-bottom: 20px;">Geographic Distribution</h3>
+                    <div class="chart-container small">
+                        <canvas id="regionChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="color: var(--color-primary); margin-bottom: 20px;">Retail Landscape</h3>
+                    <div class="chart-container small">
+                        <canvas id="retailChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h3 style="color: var(--color-primary); margin-bottom: 20px;">Population by Region</h3>
+                    <table class="info-table">
+                        <thead>
+                            <tr>
+                                <th>Region</th>
+                                <th>Population</th>
+                                <th>% of Total</th>
+                                <th>Retailers</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>London</strong></td>
+                                <td>34,560</td>
+                                <td><span class="badge badge-primary">40%</span></td>
+                                <td>~10</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Manchester</strong></td>
+                                <td>10,368</td>
+                                <td><span class="badge badge-primary">12%</span></td>
+                                <td>~3</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Birmingham</strong></td>
+                                <td>6,912</td>
+                                <td><span class="badge badge-primary">8%</span></td>
+                                <td>~2</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Other Major Cities</strong></td>
+                                <td>25,920</td>
+                                <td><span class="badge badge-primary">30%</span></td>
+                                <td>~7</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Rest of UK</strong></td>
+                                <td>8,640</td>
+                                <td><span class="badge badge-primary">10%</span></td>
+                                <td>~3</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <h3 style="color: var(--color-primary); margin-bottom: 20px;">Population Estimates</h3>
+                    <div class="stat-row">
+                        <span class="stat-label">Myanmar-born (Census 2021)</span>
+                        <span class="stat-value">64,000</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Heritage Population</span>
+                        <span class="stat-value">86,400</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Total Households</span>
+                        <span class="stat-value">34,560</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Avg Annual Spend/HH</span>
+                        <span class="stat-value">£2,800</span>
+                    </div>
+                    <div class="highlight-box" style="margin-top: 20px;">
+                        <h4>Primary Growth Driver</h4>
+                        <p>Post-2021 coup migration wave has accelerated diaspora growth in UK. Younger demographic profile drives higher e-commerce adoption.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DEMOGRAPHIC SEGMENTATION -->
+        <div class="section">
+            <h2 class="section-title">Customer Segmentation Analysis</h2>
+            
+            <div class="grid-2">
+                <div class="card">
+                    <div class="chart-container small">
+                        <canvas id="demographicChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="color: var(--color-primary); margin-bottom: 20px;">Segment Profile</h3>
+                    <div class="stat-row">
+                        <span class="stat-label">Professional/Skilled Migrants</span>
+                        <span class="stat-value">50%</span>
+                    </div>
+                    <p style="font-size: 0.85em; color: var(--color-text-light); margin-bottom: 15px;">Ages 25–55, £35k–£75k+ income, £1,800–£3,600 annual spend</p>
+
+                    <div class="stat-row">
+                        <span class="stat-label">UK-born/Families</span>
+                        <span class="stat-value">20%</span>
+                    </div>
+                    <p style="font-size: 0.85em; color: var(--color-text-light); margin-bottom: 15px;">Family households, highest spend £2,400–£4,800 annually</p>
+
+                    <div class="stat-row">
+                        <span class="stat-label">Refugees/Asylum Seekers</span>
+                        <span class="stat-value">18%</span>
+                    </div>
+                    <p style="font-size: 0.85em; color: var(--color-text-light); margin-bottom: 15px;">Price-sensitive, community-focused, £720–£1,440 annual spend</p>
+
+                    <div class="stat-row">
+                        <span class="stat-label">Students</span>
+                        <span class="stat-value">12%</span>
+                    </div>
+                    <p style="font-size: 0.85em; color: var(--color-text-light); margin-bottom: 0;">High digital adoption, £360–£720 annual spend</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- MARKET DRIVERS -->
+        <div class="section">
+            <h2 class="section-title">Market Growth Drivers</h2>
+            
+            <div class="card">
+                <table class="info-table">
+                    <thead>
+                        <tr>
+                            <th>Driver</th>
+                            <th>Impact</th>
+                            <th>Timeline</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>UK Ethnic Food Market Growth</strong></td>
+                            <td><span class="badge badge-success">8.4–9.5% CAGR</span></td>
+                            <td>2024–2032</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Subscription Model Adoption</strong></td>
+                            <td><span class="badge badge-success">26% current, 35% signups projected</span></td>
+                            <td>2024–2025</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Myanmar Diaspora Expansion</strong></td>
+                            <td><span class="badge badge-success">Post-2021 coup wave</span></td>
+                            <td>2021–ongoing</td>
+                        </tr>
+                        <tr>
+                            <td><strong>E-commerce Food Penetration</strong></td>
+                            <td><span class="badge badge-success">28% increased online food purchases</span></td>
+                            <td>2024</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Competitor Compliance Burden</strong></td>
+                            <td><span class="badge badge-warning">Brexit regulatory complexity</span></td>
+                            <td>2021–ongoing</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- COMPETITIVE LANDSCAPE -->
+        <div class="section">
+            <h2 class="section-title">Competitive Positioning</h2>
+            
+            <div class="grid-2">
+                <div class="card">
+                    <h3 style="color: var(--color-primary); margin-bottom: 20px;">Market Maturity</h3>
+                    <p style="color: var(--color-text-light); margin-bottom: 15px;">The Myanmar food market in the UK is <strong>fragmented and underdeveloped</strong>, dominated by:</p>
+                    <ul style="margin-left: 20px; color: var(--color-text-light);">
+                        <li>Informal family-run retailers with limited sourcing</li>
+                        <li>Traditional importers without data-driven operations</li>
+                        <li>No professional, compliant, wholesale-first suppliers</li>
+                        <li>Inconsistent pricing and product availability</li>
+                    </ul>
+                    <div class="highlight-box" style="margin-top: 20px;">
+                        <h4>Opportunity Gap</h4>
+                        <p>No existing data-driven, thin-margin, wholesale-focused competitor. First-mover advantage substantial.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="color: var(--color-primary); margin-bottom: 20px;">Little Burma's Competitive Advantages</h3>
+                    <div style="margin-bottom: 15px;">
+                        <span class="badge badge-success">Data-Driven Pricing</span>
+                        <span class="badge badge-success">UK Compliance Expertise</span>
+                        <br/>
+                        <span class="badge badge-success">Thin-Margin Focus</span>
+                        <span class="badge badge-success">Subscription Capability</span>
+                    </div>
+                    <div class="highlight-box">
+                        <h4>Competitive Moat</h4>
+                        <p>Combination of compliance knowledge, wholesale relationships, and data analytics creates defensible advantage in fragmented market with informal competitors.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STRATEGIC ROADMAP -->
+        <div class="section">
+            <h2 class="section-title">Strategic Roadmap</h2>
+            
+            <div class="grid-2">
+                <div class="card phase-card">
+                    <h4>📍 Phase 1: London Foundation (Months 0–12)</h4>
+                    <p><strong>Geographic Focus:</strong> London (40% of community, 10 existing retailers)</p>
+                    <p><strong>Objectives:</strong></p>
+                    <ul style="margin-left: 20px; color: var(--color-text-light); font-size: 0.95em;">
+                        <li>Establish 5–10 wholesale retail partnerships</li>
+                        <li>Launch B2C e-commerce platform</li>
+                        <li>Build community brand awareness</li>
+                        <li>Validate operational model</li>
+                    </ul>
+                    <p style="margin-top: 12px; color: var(--color-warning); font-weight: 600;">Priority: Highest density, fastest sales cycles</p>
+                </div>
+
+                <div class="card phase-card">
+                    <h4>🚀 Phase 2: Regional Expansion (Months 12–24)</h4>
+                    <p><strong>Geographic Focus:</strong> Manchester + Birmingham (whitespace markets)</p>
+                    <p><strong>Objectives:</strong></p>
+                    <ul style="margin-left: 20px; color: var(--color-text-light); font-size: 0.95em;">
+                        <li>Expand wholesale to 15–20 retailers across 2–3 cities</li>
+                        <li>Establish regional distribution centers</li>
+                        <li>Grow B2C subscription base 50–100%</li>
+                        <li>Validate data-driven pricing model</li>
+                    </ul>
+                    <p style="margin-top: 12px; color: var(--color-warning); font-weight: 600;">Priority: Underserved markets, limited competition</p>
+                </div>
+
+                <div class="card phase-card">
+                    <h4>🌟 Phase 3: National Leadership (Months 24+)</h4>
+                    <p><strong>Geographic Focus:</strong> UK-wide (all major cities)</p>
+                    <p><strong>Objectives:</strong></p>
+                    <ul style="margin-left: 20px; color: var(--color-text-light); font-size: 0.95em;">
+                        <li>Target 5–15% market share across key regions</li>
+                        <li>Subscription revenue 30–40% of total</li>
+                        <li>Leverage data for category expansion</li>
+                        <li>Position for European expansion</li>
+                    </ul>
+                    <p style="margin-top: 12px; color: var(--color-warning); font-weight: 600;">Priority: Data-driven scaling and brand leadership</p>
+                </div>
+
+                <div class="card phase-card">
+                    <h4>💡 Key Success Metrics</h4>
+                    <div class="stat-row">
+                        <span class="stat-label">Wholesale customers (London)</span>
+                        <span class="stat-value">5–10</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">B2C subscriber growth</span>
+                        <span class="stat-value">15–25% MoM</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Customer lifetime value</span>
+                        <span class="stat-value">High (repeat monthly)</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Market share target</span>
+                        <span class="stat-value">5–15% in 3–5 yrs</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KEY INSIGHTS -->
+        <div class="section">
+            <h2 class="section-title">Strategic Insights & Recommendations</h2>
+            
+            <div class="grid-2">
+                <div class="card">
+                    <h3 style="color: var(--color-primary); margin-bottom: 20px;">Market Opportunity</h3>
+                    <p style="margin-bottom: 15px; color: var(--color-text-light);">The £40.1M addressable market (mid-range) is substantial relative to Little Burma's early stage, yet concentrated enough to capture meaningful share through focused execution. Key opportunities:</p>
+                    <ul style="margin-left: 20px; color: var(--color-text-light);">
+                        <li><strong>B2B Dominance:</strong> £11.1M wholesale market with thin-margin model aligns with Little Burma's core competency</li>
+                        <li><strong>B2C Scaling:</strong> £29M direct market significantly larger but requires subscription economics for profitability</li>
+                        <li><strong>Geographic Whitespace:</strong> Manchester and Birmingham have 70% less retail density than London</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3 style="color: var(--color-primary); margin-bottom: 20px;">Execution Recommendations</h3>
+                    <p style="margin-bottom: 15px; color: var(--color-text-light);">To maximize market opportunity:</p>
+                    <ul style="margin-left: 20px; color: var(--color-text-light);">
+                        <li><strong>Phase 1 Focus:</strong> Prioritize London retail partnerships for rapid traction and brand validation</li>
+                        <li><strong>Data as Moat:</strong> Systematize pricing and demand data collection from day one for competitive advantage</li>
+                        <li><strong>Subscription Economics:</strong> Develop subscription LTV models early; this segment drives long-term value creation</li>
+                        <li><strong>Community Trust:</strong> Leverage diaspora organizations and cultural authenticity to differentiate from mainstream competitors</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- MARKET CONTEXT -->
+        <div class="section">
+            <h2 class="section-title">Market Context & UK Ethnic Food Landscape</h2>
+            
+            <div class="card">
+                <div class="grid-2">
+                    <div>
+                        <h3 style="color: var(--color-primary); font-size: 1.2em; margin-bottom: 15px;">UK Ethnic Food Market Overview</h3>
+                        <div class="stat-row">
+                            <span class="stat-label">2024 Market Value</span>
+                            <span class="stat-value">£3,200M</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Growth Rate (CAGR)</span>
+                            <span class="stat-value">8.4–9.5%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Projected 2030 Value</span>
+                            <span class="stat-value">£5,689M</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Asian Cuisine Share</span>
+                            <span class="stat-value">49.6% (£1,587M)</span>
+                        </div>
+                        <p style="margin-top: 20px; color: var(--color-text-light); font-size: 0.95em;">The UK ethnic food market significantly outpaces mainstream grocery growth (2–3%), driven by multicultural populations, e-commerce expansion, and health/wellness trends.</p>
+                    </div>
+
+                    <div>
+                        <h3 style="color: var(--color-primary); font-size: 1.2em; margin-bottom: 15px;">Distribution Landscape</h3>
+                        <p style="color: var(--color-text-light); margin-bottom: 12px;"><strong>Traditional Wholesale:</strong> Independent ethnic retailers and Asian grocery stores dominate supply chain, sourced from specialized importers (JK Foods, Kwan Yick, etc.)</p>
+                        <p style="color: var(--color-text-light); margin-bottom: 12px;"><strong>Modern Retail:</strong> Supermarket chains (Tesco, Sainsbury's, Asda) expanding ethnic sections; still <7% of retail sales</p>
+                        <p style="color: var(--color-text-light); margin-bottom: 12px;"><strong>E-commerce Growth:</strong> Online grocery adoption accelerating post-COVID; 28% of consumers increased online food purchases</p>
+                        <p style="color: var(--color-text-light);"><strong>Subscription Gap:</strong> Underdeveloped segment for ethnic groceries; 26% UK food subscription adoption but minimal ethnic-focused options</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p><strong>Little Burma Market Research Dashboard</strong></p>
+        <p>Market analysis based on 2021 UK Census data, ONS statistics, and ethnic food market research (2024)</p>
+        <p style="font-size: 0.9em; margin-top: 15px;">© 2025 Little Burma Limited | Confidential</p>
+    </div>
+
+    <script>
+        // Chart 1: Market Sizing Scenarios
+        const scenarioCtx = document.getElementById('scenarioChart').getContext('2d');
+        new Chart(scenarioCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Conservative', 'Mid-Range', 'High'],
+                datasets: [
+                    {
+                        label: 'B2B Wholesale',
+                        data: [5.6, 11.1, 16.7],
+                        backgroundColor: '#2180D9'
+                    },
+                    {
+                        label: 'B2C Direct',
+                        data: [18.1, 29.0, 42.3],
+                        backgroundColor: '#32b8c6'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '£' + value + 'M';
+                            }
+                        }
+                    },
+                    y: {
+                        stacked: true
+                    }
+                }
+            }
+        });
+
+        // Chart 2: Regional Distribution
+        const regionCtx = document.getElementById('regionChart').getContext('2d');
+        new Chart(regionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['London', 'Manchester', 'Birmingham', 'Other Cities', 'Rest of UK'],
+                datasets: [{
+                    data: [40, 12, 8, 30, 10],
+                    backgroundColor: [
+                        '#2180D9',
+                        '#32b8c6',
+                        '#2b8081',
+                        '#d48961',
+                        '#e0d5c8'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            }
+        });
+
+        // Chart 3: Retail Concentration
+        const retailCtx = document.getElementById('retailChart').getContext('2d');
+        new Chart(retailCtx, {
+            type: 'bar',
+            data: {
+                labels: ['London', 'Manchester', 'Birmingham', 'Other Cities', 'Rest of UK'],
+                datasets: [{
+                    label: 'Estimated Retailers',
+                    data: [10, 3, 2, 7, 3],
+                    backgroundColor: '#2180D9'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 2
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+        // Chart 4: Demographic Segmentation
+        const demoCtx = document.getElementById('demographicChart').getContext('2d');
+        new Chart(demoCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Professional/Skilled', 'UK-born/Families', 'Refugees/Asylum', 'Students'],
+                datasets: [{
+                    data: [50, 20, 18, 12],
+                    backgroundColor: [
+                        '#2180D9',
+                        '#32b8c6',
+                        '#d48961',
+                        '#2b8081'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
